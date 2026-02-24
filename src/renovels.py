@@ -1,11 +1,12 @@
-import requests
+from requests import Session
 
 class Renovels:
 	def __init__(self) -> None:
 		self.api = "https://api.renovels.org"
 		self.recaptcha_api = "https://www.google.com/recaptcha/api2"
-		self.headers = {
-			"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36"
+		self.session = Session()
+		self.session.headers = {
+			"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.114 Safari/537.36"
 		}
 		self.user_id = None
 		self.access_token = None
@@ -21,21 +22,28 @@ class Renovels:
 			key: str = "6LdGNc8UAAAAAOi7mZdoujfQ0s-zHexDM8AWyB1J",
 			co: str = "aHR0cHM6Ly9yZW5vdmVscy5vcmc6NDQz",
 			bg: str = "!PjigOD0KAAQeDmbXbQEHnAPKGu-t_o708wc3kcTmcuDgv3uLL8uZv86ItulHJ4T8KxIrUaFTX3YvwThY_KZD2eAAaB1-LDAID-Ac9eenF4fc7jH8d7cs3bHwgC_v8MCYTsnbxk6XyKnzGcbDY5MkkUUvP1uqI5AgC01qW66QeMmAbcBXfsO9PQmcKCkdMpWg_rdnbLNQ8123t0zAn43NngTp2udEJLfTReZDUW0dFelpuWcLKQPgmqCp4ql7zuw0rdLz-I2SqLTq24KxiLQ_IdEDU47Stj7-kFGStxAIpC90Yb87l-ZvLnLOanQhqsSXrAFfk1Iq3WH8psN_HQocY5_3KvEM6icEVOTP7O92NwXtF_CR5rtEcRQCRWy6FwXq7IJU9llLiMGs-b-riJF6KZ41E7_thePws0-Rs7MZT1qMXfDjOi6rog3iqVJ89bXfaVRoCKr-pbvAOcJv2WNEIIVCCDQdEP0rSNHYFuQifX03gzB3xNYPctixe1UIMS2vdT75vaaRTSqG1NdZd8ur3DdhqZMs6CYr8ePZmMWKle3e0S5o3-jF2Whu7demXBYJJHLYUVUyBeSrwVROzUYEdz2ig2noOisgyAIgSYFhjQ2FpkpQ4pkBocNlmbmmJsceaA0b-Q8bNa4m9BDa6z3wX3ES_kRnOz9n_j2VK1LvkIElz4hMOQM3BbWqT4QrOIFcGU_ZdPc91aDCxhHfPPiZW8plmAuTam4XrCInIbT-UTP8L6sRzpqY3yuMySkWhmKQXNIYhThrl11GkbzmuUS8RKCwcZyDp1OK9RSNXXI6NSo5DXqb9XLNXU_d6DBIh8Ozrh7HsHE0m6pAZJCs-K4PwYwWbOebyWZiPiiQaqpzXtAqJVjNuZZ2Qv4jHzhV9v2HKgJeEPNucpB_nACcVURvFzL4VTiBxeb5XVoEWLeteBg-T4uEuGbV8dfQKJ6kCetWAycvzXwzzqH-X-_BSRzAVdcIcoxIJ-iQsXtsFRna4SJDvbThEtnCyyo9JMTjfhLOdK9t3kZ6fvKMTWmJWlQZ4t1c_0i2tT8BaUc9UumCe6RAuFLLlxY2qoGPcjbngQjMTakGAPyEVuiz0d4tmZb974qp1cELMXzjyuJciYUtYwW5c8zNOmwo8pzsPM09zHrlZTY7aA9BsR4ev9gl7c5KnEPKyhWjqEoljgeSF5FpyJs4ERQfgXpl82W9P75ppRXvbgeRz8L6eujdlI_Rd_SSM2TgNsQhZDn4HKA_ky7p0tMx5GW49Ww3-fKrns5p3DSy5x7COcsNNqnCGCmjft_awzS-bBgBAWaORIy5Ng*") -> str:
-		parameters = f"v={v}&reason=q&c=<token>&k={key}&co={co}&hl={hl}&size={size}&chr={chr}&vh={vh}&bg={bg}"
-		anchor = requests.get(
-			f"{self.recaptcha_api}/anchor?ar=1&k={key}&co={co}&hl={hl}&v={v}&size={size}&cb={cb}",
-			headers=self.headers).text
-		recaptcha_token = anchor.split(
-			'recaptcha-token" value="')[1].split('">')[0]
-		data = parameters.replace("<token>", recaptcha_token)
-		self.headers["content-type"] = "application/x-www-form-urlencoded"
-		response = requests.post(
-			f"{self.recaptcha_api}/reload?k={key}",
-			data=data,
-			headers=self.headers).text
-		return response.split(
-				'"rresp","'
-			)[1].split('"')[0] if "rresp" in response else response
+		parameters = (
+            f"v={v}&reason=q&c=<token>&k={key}&co={co}"
+            f"&hl={hl}&size={size}&chr={chr}&vh={vh}&bg={bg}"
+        )
+        params = {
+            "ar": 1,
+            "k": key,
+            "co": co,
+            "hl": hl,
+            "v": v,
+            "size": size,
+            "cb": cb
+        }
+        anchor = self.session.get(
+            f"{self.recaptcha_api}/anchor", params=params).text
+        recaptcha_token = anchor.split('recaptcha-token" value="')[1].split('">')[0]
+        data = parameters.replace("<token>", recaptcha_token)
+        self.session.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        response = self.session.post(
+            f"{self.recaptcha_api}/reload?k={key}", data=data).text
+        return response.split(
+            '"rresp","')[1].split('"')[0] if "rresp" in response else response
 
 	def login(
 			self,
@@ -46,14 +54,12 @@ class Renovels:
 			"password": password,
 			"g-recaptcha-response": self.generate_captcha()
 		}
-		response = requests.post(
-			f"{self.api}/api/users/login/",
-			data=data,
-			headers=self.headers).json()
+		response = self.session.post(
+			f"{self.api}/api/users/login/", data=data).json()
 		if "content" in response:
 			self.user_id = response["content"]["id"]
 			self.access_token = response["content"]["access_token"]
-			self.headers["authorization"] = f"bearer {self.access_token}"
+			self.session.headers["Authorization"] = f"Bearer {self.access_token}"
 		return response
 
 	def send_comment(
@@ -68,10 +74,8 @@ class Renovels:
 			"text": text,
 			"title": title_id
 		}
-		return requests.post(
-			f"{self.api}/api/activity/comments/?title_id={title_id}",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/activity/comments/?title_id={title_id}", data=data).json()
 
 	def logging(self, path_name: str = "/") -> dict:
 		data = {
@@ -88,32 +92,27 @@ class Renovels:
 			"appVersion": "5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36",
 			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36"
 		}
-		return requests.post(
-			f"{self.api}/api/logging/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/logging/", data=data).json()
 
 	def similar_titles(self, title: str) -> dict:
-		return requests.get(
-			f"{self.api}/api/titles/{title}/similar/",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/titles/{title}/similar/").json()
 
 	def search_title(
 			self,
 			title: str,
 			count: int = 5) -> dict:
-		return requests.get(
-			f"{self.api}/api/search/?query={title}&count={count}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/search/?query={title}&count={count}").json()
 
 	def search_publishers(
 			self,
 			username: str,
 			page: int = 1,
 			count: int = 10) -> dict:
-		return requests.get(
-			f"{self.api}/api/search/?count={count}&field=publishers&page={page}&query={username}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/search/?count={count}&field=publishers&page={page}&query={username}").json()
 
 	def edit_profile(
 			self,
@@ -128,15 +127,12 @@ class Renovels:
 		}
 		if username:
 			data["username"] = username
-		return requests.put(
-			f"{self.api}/api/users/current/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.put(
+			f"{self.api}/api/users/current/", data=data).json()
 
 	def get_report_reasons(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/reports/?get=reasons&type=title",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/reports/?get=reasons&type=title").json()
 
 	def send_report(
 			self,
@@ -150,10 +146,8 @@ class Renovels:
 			"target": title_id,
 			"type": type
 		}
-		return requests.post(
-			f"{self.api}/panel/api/reports/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/panel/api/reports/", data=data).json()
 
 	def like_comment(
 			self,
@@ -163,25 +157,20 @@ class Renovels:
 			"comment": comment_id,
 			"type": type
 		}
-		return requests.post(
-			f"{self.api}/api/activity/votes/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/activity/votes/", data=data).json()
 
 	def get_genres(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/forms/titles/?get=genres",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/forms/titles/?get=genres").json()
 
 	def get_title_info(self, title: str) -> dict:
-		return requests.get(
-			f"{self.api}/api/titles/{title}/",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/titles/{title}/").json()
 
 	def get_title_chapters(self, branch_id: int) -> dict:
-		return requests.get(
-			f"{self.api}/api/titles/chapters/?branch_id={branch_id}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/titles/chapters/?branch_id={branch_id}").json()
 
 	def get_title_comments(
 			self,
@@ -193,15 +182,11 @@ class Renovels:
 			"page": page,
 			"ordering": ordering
 		}
-		return requests.get(
-			f"{self.api}/api/activity/comments/?title_id={title_id}&page={page}&ordering={ordering}",
-			data=data,
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/activity/comments/?title_id={title_id}&page={page}&ordering={ordering}", data=data).json()
 
 	def get_user_info(self, user_id: str) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/{user_id}",
-			headers=self.headers).json()
+		return self.session.get(f"{self.api}/api/users/{user_id}").json()
 
 	def get_notifications(
 			self,
@@ -209,32 +194,26 @@ class Renovels:
 			page: int = 1,
 			status: int = 0,
 			type: int = 0) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/notifications/?count={count}&page={page}&status={status}&type={type}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/users/notifications/?count={count}&page={page}&status={status}&type={type}").json()
 
 	def get_notifications_count(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/notifications/count/",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/users/notifications/count/").json()
 
 	def get_account_info(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/current/",
-			headers=self.headers).json()
+		return self.session.get(f"{self.api}/api/users/current/").json()
 
 	def get_daily_top_titles(self, count: int = 5) -> dict:
-		return requests.get(
-			f"{self.api}/api/titles/daily-top/?count={count}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/titles/daily-top/?count={count}").json()
 
 	def get_titles_last_chapters(
 			self,
 			page: int = 1,
 			count: int = 5) -> dict:
-		return requests.get(
-			f"{self.api}/api/titles/last-chapters/?page={page}&count={count}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/titles/last-chapters/?page={page}&count={count}").json()
 
 	def add_to_bookmarks(
 			self,
@@ -254,10 +233,8 @@ class Renovels:
 			"title": title_id,
 			"type": type
 		}
-		return requests.post(
-			f"{self.api}/api/users/bookmarks/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/users/bookmarks/", data=data).json()
 
 	def change_password(
 			self,
@@ -268,19 +245,15 @@ class Renovels:
 			"confirm_password": new_password,
 			"password": new_password
 		}
-		return requests.put(
-			f"{self.api}/api/users/current/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.put(
+			f"{self.api}/api/users/current/", data=data).json()
 
 	def bill_promo_code(self, promo_code: str) -> dict:
 		data = {
 			"promo_code": promo_code
 		}
-		return requests.post(
-			f"{self.api}/api/billing/promo-codes/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/billing/promo-codes/", data=data).json()
 
 	def create_publishers(
 			self,
@@ -290,10 +263,8 @@ class Renovels:
 			"name": name,
 			"vk": vk_url
 		}
-		return requests.post(
-			f"{self.api}/api/publishers/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/publishers/", data=data).json()
 
 	def rate_title(
 			self,
@@ -303,10 +274,8 @@ class Renovels:
 			"rating": rating,
 			"title": title_id
 		}
-		return requests.post(
-			f"{self.api}/api/activity/ratings/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/activity/ratings/", data=data).json()
 
 	def like_chapter(
 			self,
@@ -316,60 +285,50 @@ class Renovels:
 			"chapter": chapter_id,
 			"type": type
 		}
-		return requests.post(
-			f"{self.api}/api/activity/votes/",
-			data=data,
-			headers=self.headers).json()
+		return self.session.post(
+			f"{self.api}/api/activity/votes/", data=data).json()
 
 	def get_categories(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/forms/titles/?get=categories",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/forms/titles/?get=categories").json()
 
 	def get_age_limits(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/forms/titles/?get=age_limit",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/forms/titles/?get=age_limit").json()
 
 	def get_types(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/forms/titles/?get=types",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/forms/titles/?get=types").json()
 
 	def get_statuses(self) -> dict:
-		return requests.get(
-			f"{self.api}/api/forms/titles/?get=status",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/forms/titles/?get=status").json()
 
 	def get_user_bookmarks(
 			self,
 			type: int,
 			user_id: int,
 			page: int = 1) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/{user_id}/bookmarks/?ordering=-chapter_date&page={page}&type={type}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/users/{user_id}/bookmarks/?ordering=-chapter_date&page={page}&type={type}").json()
 
 	def get_user_history(
 			self,
 			user_id: int,
 			page: int = 1) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/{user_id}/history/?page={page}",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/users/{user_id}/history/?page={page}").json()
 
 	def get_social_notifications(
 			self,
 			count: int = 30,
 			page: int = 1) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/notifications/?count={count}&page={page}&status=0&type=1",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/users/notifications/?count={count}&page={page}&status=0&type=1").json()
 
 	def get_important_notifications(
 			self,
 			count: int = 30,
 			page: int = 1) -> dict:
-		return requests.get(
-			f"{self.api}/api/users/notifications/?count={count}&page={page}&status=0&type=2",
-			headers=self.headers).json()
+		return self.session.get(
+			f"{self.api}/api/users/notifications/?count={count}&page={page}&status=0&type=2").json()
