@@ -3,7 +3,8 @@ Web-API for [renovels.org](https://renovels.org) russian website to read novels
 
 ## Example
 ```python
-import renovels
-renovels = renovels.Renovels()
+from renovels import Renovels
+
+renovels = Renovels()
 renovels.login(username="", password="")
 ```
